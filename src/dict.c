@@ -74,7 +74,7 @@ SDB_API bool dict_set(dict *m, dicti k, dicti v, void *u) {
 	if (!m || !m->size || k == 0) {
 		return false;
 	}
-	const int bucket = dict_bucket (m, k);
+	const ut32 bucket = dict_bucket (m, k);
 	dictkv *kv = (dictkv *)m->table[bucket];
 	if (!kv) {
 		kv = (dictkv *)calloc (sizeof (dictkv), 2);
@@ -96,8 +96,9 @@ SDB_API bool dict_set(dict *m, dicti k, dicti v, void *u) {
 		}
 		kv++;
 	}
-	int curln = (kv - tmp);
-	dictkv *newkv = (dictkv *)realloc (tmp, (curln + 2) * sizeof (dictkv));
+	size_t curln = (size_t)(kv - tmp);
+	size_t newsize = (size_t)((curln + 2) * sizeof (dictkv));
+	dictkv *newkv = (dictkv *)realloc (tmp, newsize);
 	if (newkv) {
 		kv = newkv;
 		m->table[bucket] = newkv;
@@ -136,7 +137,7 @@ SDB_API dictkv *dict_getr(dict *m, dicti k) {
 	if (!m->size) {
 		return NULL;
 	}
-	int bucket = dict_bucket (m, k);
+	const ut32 bucket = dict_bucket (m, k);
 	dictkv *kv = (dictkv *)m->table[bucket];
 	if (kv) {
 		while (kv->k != 0) {
@@ -166,7 +167,7 @@ SDB_API bool dict_add(dict *m, dicti k, dicti v, void *u) {
 }
 
 SDB_API bool dict_del(dict *m, dicti k) {
-	int bucket = dict_bucket (m, k);
+	const ut32 bucket = dict_bucket (m, k);
 	if (k == 0) {
 		return false;
 	}

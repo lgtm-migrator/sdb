@@ -32,8 +32,8 @@ extern "C" {
 #endif
 
 #if defined(__GNUC__)
-#define SDB_LIKELY(x) __builtin_expect((size_t)(x),1)
-#define SDB_UNLIKELY(x) __builtin_expect((size_t)(x),0)
+#define SDB_LIKELY(x) __builtin_expect((bool)(x),1)
+#define SDB_UNLIKELY(x) __builtin_expect((bool)(x),0)
 #else
 #define SDB_LIKELY(x) (x)
 #define SDB_UNLIKELY(x) (x)
@@ -170,9 +170,9 @@ SDB_API char *sdb_querysf(Sdb* s, char *buf, size_t buflen, const char *fmt, ...
 SDB_API int sdb_query_file(Sdb *s, const char* file);
 SDB_API bool sdb_exists(Sdb*, const char *key);
 SDB_API bool sdb_remove(Sdb*, const char *key, ut32 cas);
-SDB_API int sdb_unset(Sdb*, const char *key, ut32 cas);
-SDB_API int sdb_nunset(Sdb*, ut64 nkey, ut32 cas);
-SDB_API int sdb_unset_like(Sdb *s, const char *k);
+SDB_API ut32 sdb_unset(Sdb*, const char *key, ut32 cas);
+SDB_API ut32 sdb_nunset(Sdb*, ut64 nkey, ut32 cas);
+SDB_API bool sdb_unset_like(Sdb *s, const char *k);
 SDB_API char** sdb_like(Sdb *s, const char *k, const char *v, SdbForeachCallback cb);
 
 // diffing
@@ -198,23 +198,23 @@ SDB_API char *sdb_nget(Sdb*, ut64 nkey, ut32 *cas);
 
 // Gets a pointer to the value associated with `key` and returns in `vlen` the
 // length of the value string.
-SDB_API char *sdb_get_len(Sdb*, const char *key, int *vlen, ut32 *cas);
+SDB_API char *sdb_get_len(Sdb*, const char *key, size_t *vlen, ut32 *cas);
 
 // Gets a const pointer to the value associated with `key`
 SDB_API const char *sdb_const_get(Sdb*, const char *key, ut32 *cas);
 
 // Gets a const pointer to the value associated with `key` and returns in
 // `vlen` the length of the value string.
-SDB_API const char *sdb_const_get_len(Sdb* s, const char *key, int *vlen, ut32 *cas);
-SDB_API int sdb_set(Sdb*, const char *key, const char *data, ut32 cas);
-SDB_API int sdb_nset(Sdb*, ut64 nkey, const char *data, ut32 cas);
+SDB_API const char *sdb_const_get_len(Sdb* s, const char *key, size_t *vlen, ut32 *cas);
+SDB_API ut32 sdb_set(Sdb*, const char *key, const char *data, ut32 cas);
+SDB_API ut32 sdb_nset(Sdb*, ut64 nkey, const char *data, ut32 cas);
 SDB_API ut64 sdb_num_nget(Sdb *s, ut64 nkey, ut32 *cas);
 SDB_API int sdb_num_nset(Sdb* s, ut64 nkey, ut64 nval, ut32 cas);
-SDB_API int sdb_set_owned(Sdb* s, const char *key, char *val, ut32 cas);
-SDB_API int sdb_concat(Sdb *s, const char *key, const char *value, ut32 cas);
+SDB_API ut32 sdb_set_owned(Sdb* s, const char *key, char *val, ut32 cas);
+SDB_API ut32 sdb_concat(Sdb *s, const char *key, const char *value, ut32 cas);
 SDB_API int sdb_uncat(Sdb *s, const char *key, const char *value, ut32 cas);
-SDB_API int sdb_add(Sdb* s, const char *key, const char *val, ut32 cas);
-SDB_API int sdb_nadd(Sdb* s, ut64 nkey, const char *val, ut32 cas);
+SDB_API ut32 sdb_add(Sdb* s, const char *key, const char *val, ut32 cas);
+SDB_API ut32 sdb_nadd(Sdb* s, ut64 nkey, const char *val, ut32 cas);
 SDB_API bool sdb_sync(Sdb*);
 SDB_API void sdbkv_free(SdbKv *kv);
 
@@ -249,7 +249,7 @@ SDB_API bool sdb_text_check(Sdb *s, const char *file);
 /* iterate */
 SDB_API void sdb_dump_begin(Sdb* s);
 SDB_API SdbKv *sdb_dump_next(Sdb* s);
-SDB_API bool sdb_dump_dupnext(Sdb* s, char *key, char **value, int *_vlen);
+SDB_API bool sdb_dump_dupnext(Sdb* s, char *key, char **value, ut32 *_vlen);
 
 /* journaling */
 SDB_API bool sdb_journal_close(Sdb *s);
@@ -277,7 +277,7 @@ SDB_API ut64 sdb_expire_get(Sdb* s, const char *key, ut32 *cas);
 SDB_API ut64 sdb_now(void);
 SDB_API ut64 sdb_unow(void);
 SDB_API ut32 sdb_hash(const char *key);
-SDB_API ut32 sdb_hash_len(const char *key, ut32 *len);
+SDB_API ut32 sdb_hash_len(const ut8 *key, ut32 *len);
 SDB_API ut8 sdb_hash_byte(const char *s);
 
 /* json api */
@@ -319,19 +319,19 @@ SDB_API bool sdb_ns_unset(Sdb *s, const char *name, Sdb *r);
 SDB_API bool sdb_array_contains(Sdb* s, const char *key, const char *val, ut32 *cas);
 SDB_API bool sdb_array_contains_num(Sdb *s, const char *key, ut64 val, ut32 *cas);
 SDB_API int sdb_array_indexof(Sdb *s, const char *key, const char *val, ut32 cas);
-SDB_API int sdb_array_set(Sdb* s, const char *key, int idx, const char *val, ut32 cas);
-SDB_API int sdb_array_set_num(Sdb* s, const char *key, int idx, ut64 val, ut32 cas);
+SDB_API ut32 sdb_array_set(Sdb* s, const char *key, int idx, const char *val, ut32 cas);
+SDB_API ut32 sdb_array_set_num(Sdb* s, const char *key, int idx, ut64 val, ut32 cas);
 SDB_API bool sdb_array_append(Sdb *s, const char *key, const char *val, ut32 cas);
 SDB_API bool sdb_array_append_num(Sdb *s, const char *key, ut64 val, ut32 cas);
 SDB_API bool sdb_array_prepend(Sdb *s, const char *key, const char *val, ut32 cas);
 SDB_API bool sdb_array_prepend_num(Sdb *s, const char *key, ut64 val, ut32 cas);
-SDB_API char *sdb_array_get(Sdb* s, const char *key, int idx, ut32 *cas);
-SDB_API ut64 sdb_array_get_num(Sdb* s, const char *key, int idx, ut32 *cas);
+SDB_API char *sdb_array_get(Sdb* s, const char *key, size_t idx, ut32 *cas);
+SDB_API ut64 sdb_array_get_num(Sdb* s, const char *key, size_t idx, ut32 *cas);
 SDB_API int sdb_array_get_idx(Sdb *s, const char *key, const char *val, ut32 cas); // agetv
-SDB_API int sdb_array_insert(Sdb* s, const char *key, int idx, const char *val, ut32 cas);
-SDB_API int sdb_array_insert_num(Sdb* s, const char *key, int idx, ut64 val, ut32 cas);
-SDB_API int sdb_array_unset(Sdb* s, const char *key, int n, ut32 cas); // leaves empty bucket
-SDB_API int sdb_array_delete(Sdb* s, const char *key, int n, ut32 cas);
+SDB_API ut32 sdb_array_insert(Sdb* s, const char *key, int idx, const char *val, ut32 cas);
+SDB_API ut32 sdb_array_insert_num(Sdb* s, const char *key, int idx, ut64 val, ut32 cas);
+SDB_API ut32 sdb_array_unset(Sdb* s, const char *key, int n, ut32 cas); // leaves empty bucket
+SDB_API bool sdb_array_delete(Sdb* s, const char *key, int n, ut32 cas);
 SDB_API void sdb_array_sort(Sdb* s, const char *key, ut32 cas);
 SDB_API void sdb_array_sort_num(Sdb* s, const char *key, ut32 cas);
 // set
@@ -357,7 +357,7 @@ SDB_API int sdb_array_remove_num(Sdb* s, const char *key, ut64 val, ut32 cas);
 // helpers
 SDB_API char *sdb_anext(char *str, char **next);
 SDB_API const char *sdb_const_anext(const char *str);
-SDB_API int sdb_alen(const char *str);
+SDB_API size_t sdb_alen(const char *str);
 SDB_API int sdb_alen_ignore_empty(const char *str);
 SDB_API int sdb_array_size(Sdb* s, const char *key);
 SDB_API int sdb_array_length(Sdb* s, const char *key);

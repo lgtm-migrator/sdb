@@ -26,9 +26,9 @@ SDB_IPI Rangstr rangstr_new(const char *s) {
 	return rs;
 }
 
-SDB_IPI int rangstr_length(Rangstr* rs) {
+SDB_IPI size_t rangstr_length(Rangstr* rs) {
 	if (rs->t > rs->f) {
-		return rs->t - rs->f;
+		return (size_t)(rs->t - rs->f);
 	}
 	return 0;
 }
@@ -65,7 +65,7 @@ SDB_IPI char *rangstr_dup(Rangstr *rs) {
 	if (!rs->p) {
 		return NULL;
 	}
-	int len = rangstr_length (rs);
+	size_t len = rangstr_length (rs);
 	char *p = (char *)malloc (len + 1);
 	if (p) {
 		memcpy (p, rs->p + rs->f, len);
@@ -85,9 +85,9 @@ SDB_IPI Rangstr rangstr_news(const char *s, RangstrType *res, int i) {
 }
 
 SDB_IPI int rangstr_cmp(Rangstr *a, Rangstr *b) {
-	int la = a->t - a->f;
-	int lb = b->t - b->f;
-	int lbz = strlen (b->p + b->f);
+	size_t la = a->t - a->f;
+	size_t lb = b->t - b->f;
+	size_t lbz = strlen (b->p + b->f);
 	if (lbz < lb) {
 		lb = lbz;
 	}

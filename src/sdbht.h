@@ -31,7 +31,7 @@ static inline ut32 sdbkv_value_len(const SdbKv *kv) {
 	return kv->base.value_len;
 }
 
-SDB_API SdbKv* sdbkv_new2(const char *k, int kl, const char *v, int vl);
+SDB_API SdbKv* sdbkv_new2(const char *k, ut32 kl, const char *v, ut32 vl);
 SDB_API SdbKv* sdbkv_new(const char *k, const char *v);
 extern SDB_API void sdbkv_free(SdbKv *kv);
 

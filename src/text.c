@@ -71,7 +71,8 @@ static int cmp_ns(const void *a, const void *b) {
 // flush a block of text that doesn't have to be escaped
 
 static bool escape_flush(int fd, const char *p, const char *n) {
-	if (p != n && write (fd, p, n - p) != n - p) {
+	const size_t len = (size_t)(n - p);
+	if (p != n && write (fd, p, len) != (ssize_t)len) {
 		return false;
 	}
 	return true;
@@ -427,24 +428,25 @@ SDB_API bool sdb_text_load(Sdb *s, const char *file) {
 	if (fstat (fd, &st) || !st.st_size) {
 		goto beach;
 	}
+	size_t st_size = (size_t) st.st_size;
 #if USE_MMAN
-	x = (char *)mmap (0, st.st_size, PROT_READ | PROT_WRITE, MAP_PRIVATE, fd, 0);
+	x = (char *)mmap (0, st_size, PROT_READ | PROT_WRITE, MAP_PRIVATE, fd, 0);
 	if (x == MAP_FAILED) {
 		goto beach;
 	}
 #else
-	x = (char *)calloc (1, st.st_size);
+	x = (char *)calloc (1, st_size);
 	if (!x) {
 		goto beach;
 	}
-	if (read (fd, x, st.st_size) != st.st_size) {
+	if (read (fd, x, st_size) != st_size) {
 		free (x);
 		goto beach;
 	}
 #endif
-	r = sdb_text_load_buf (s, x, st.st_size);
+	r = sdb_text_load_buf (s, x, st_size);
 #if USE_MMAN
-	munmap (x, st.st_size);
+	munmap (x, st_size);
 #else
 	free (x);
 #endif
@@ -464,7 +466,7 @@ SDB_API bool sdb_text_check(Sdb *s, const char *file) {
 		close (fd);
 		return false;
 	}
-	int count = read (fd, buf, R_MIN (st.st_size, (off_t)sizeof (buf)));
+	ssize_t count = read (fd, buf, R_MIN ((size_t)st.st_size, (off_t)sizeof (buf)));
 	close (fd);
 	if (count < 1) {
 		return false;

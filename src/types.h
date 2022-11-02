@@ -106,6 +106,7 @@ extern "C" {
 #endif
 #define UT32_MAX ((ut32)0xffffffff)
 #define UT64_MAX ((ut64)(0xffffffffffffffffLL))
+#define ST32_MAX ((int)0x7FFFFFFF)
 #endif
 #ifndef R_MAX_DEFINED
 #define R_MAX(x,y) (((x)>(y))?(x):(y))
@@ -123,21 +124,21 @@ static inline int seek_set(int fd, off_t pos) {
 	return ((fd == -1) || (lseek (fd, (off_t) pos, SEEK_SET) == -1))? 0:1;
 }
 
-static inline void ut32_pack(char s[4], ut32 u) {
-	s[0] = u & 255;
+static inline void ut32_pack(ut8 s[4], ut32 u) {
+	s[0] = (ut8)(u & 255);
 	u >>= 8;
-	s[1] = u & 255;
+	s[1] = (ut8)(u & 255);
 	u >>= 8;
-	s[2] = u & 255;
-	s[3] = u >> 8;
+	s[2] = (ut8)(u & 255);
+	s[3] = (ut8)(u >> 8) & 0xff;
 }
 
-static inline void ut32_pack_big(char s[4], ut32 u) {
-	s[3] = u & 255;
+static inline void ut32_pack_big(ut8 s[4], ut32 u) {
+	s[3] = (ut8)(u & 255);
 	u >>= 8;
-	s[2] = u & 255;
+	s[2] = (ut8)(u & 255);
 	u >>= 8;
-	s[1] = u & 255;
+	s[1] = (ut8)(u & 0xff);
 	s[0] = u >> 8;
 }
 
